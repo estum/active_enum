@@ -21,6 +21,8 @@ describe ActiveEnum::Storage::I18nStore do
   end
 
   after do
+    I18n.config.enforce_available_locales = false
+    I18n.default_locale = @default_locale
     I18n.locale = @default_locale
   end
 

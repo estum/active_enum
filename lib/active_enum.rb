@@ -1,3 +1,4 @@
+require 'active_support/configurable'
 require 'active_enum/base'
 require 'active_enum/extensions'
 require 'active_enum/storage/abstract_store'
@@ -5,29 +6,35 @@ require 'active_enum/version'
 require 'active_enum/railtie' if defined?(Rails)
 
 module ActiveEnum
-  mattr_accessor :enum_classes
-  @@enum_classes = []
-
-  mattr_accessor :use_name_as_value
-  @@use_name_as_value = false
-
-  mattr_accessor :storage
-  @@storage = :memory
-
-  mattr_accessor :storage_options
-  @@storage_options = {}
-
-  def storage=(*args)
-    @@storage_options = args.extract_options!
-    @@storage = args.first
+  include ActiveSupport::Configurable
+  config_accessor :enum_classes do
+    []
   end
 
-  mattr_accessor :extend_classes
-  @@extend_classes = []
+  config_accessor :use_name_as_value do
+    false
+  end
 
+  config_accessor :storage do
+    :memory
+  end
+
+  config_accessor :storage_options do
+    {}
+  end
+
+  def storage=(*args)
+    config.storage_options = args.extract_options!
+    config.storage = args.first
+  end
+
+  config_accessor :extend_classes do
+    []
+  end
+  
   # Setup method for plugin configuration
   def self.setup
-    yield self
+    yield config
     extend_classes!
   end
 
@@ -45,15 +52,15 @@ module ActiveEnum
     raise "Define requires block" unless block_given?
     EnumDefinitions.new.instance_eval(&block)
   end
-
+  
   def self.storage_class
-    @@storage_class ||= "ActiveEnum::Storage::#{storage.to_s.classify}Store".constantize
+    @storage_class ||= "ActiveEnum::Storage::#{storage.to_s.classify}Store".constantize
   end
 
   private
 
   def self.extend_classes!
-    extend_classes.each {|klass| klass.send(:include, ActiveEnum::Extensions) }
+    config.extend_classes.each {|klass| klass.send(:include, ActiveEnum::Extensions) }
   end
 
 end

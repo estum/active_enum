@@ -3,9 +3,10 @@ module ActiveEnum
     initializer "active_enum.active_record_extensions" do
       ActiveSupport.on_load(:active_record) do
         require 'active_enum/acts_as_enum'
-
-        ActiveEnum.extend_classes << ActiveRecord::Base
-        ActiveEnum.extend_classes!
+        
+        unless ActiveRecord::Base.include?(ActiveEnum::Extensions)
+          ActiveRecord::Base.send(:include, ActiveEnum::Extensions)
+        end
       end
     end
   end
