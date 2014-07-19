@@ -35,7 +35,7 @@ module ActiveEnum
         attributes.each do |attribute|
           begin
             if block_given?
-              enum = define_implicit_enum_class_for_attribute(attribute, block)
+              enum = define_implicit_enum_class_for_attribute(attribute, options.slice(:storage), block)
             else
               enum = options[:with] || attribute.to_s.camelize.constantize
             end
@@ -62,10 +62,11 @@ module ActiveEnum
         define_active_enum_question_method(attribute)
       end
 
-      def define_implicit_enum_class_for_attribute(attribute, block)
+      def define_implicit_enum_class_for_attribute(attribute, options = {}, block)
         enum_class_name = "#{name}::#{attribute.to_s.camelize}"
         eval("class #{enum_class_name} < ActiveEnum::Base; end")
         enum = enum_class_name.constantize
+        enum.storage = options[:storage] if options.key? :storage
         enum.class_eval &block
         enum
       end
