@@ -10,6 +10,10 @@ module ActiveEnum
       def inherited(subclass)
         ActiveEnum.enum_classes << subclass
       end
+      
+      def mutex
+        @mutex ||= Mutex.new
+      end
 
       # Define enum values.
       #
@@ -80,7 +84,9 @@ module ActiveEnum
       end
       
       def storage=(storage)
-        @store = ActiveEnum.get_storage_class(storage).new(self, @order || :asc, ActiveEnum.storage_options)
+        mutex.synchronize do
+          @store = ActiveEnum.get_storage_class(storage).new(self, @order || :asc, ActiveEnum.storage_options)
+        end
       end
 
       private
@@ -103,7 +109,9 @@ module ActiveEnum
       end
 
       def store
-        @store ||= ActiveEnum.storage_class.new(self, @order || :asc, ActiveEnum.storage_options)
+        mutex.synchronize do
+          @store ||= ActiveEnum.storage_class.new(self, @order || :asc, ActiveEnum.storage_options)
+        end
       end
 
     end
